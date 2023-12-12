@@ -1,0 +1,30 @@
+service: crud-server
+
+package:
+  patterns:
+    - ./**/*.py
+
+provider:
+  name: aws
+  region: eu-north-1
+  versionFunctions: false
+  timeout: 900
+  iam:
+    role:
+      statements:
+        - Effect: 'Allow'
+          Action:
+            - 'secretsmanager:GetSecretValue'
+          Resource:
+            - '*'
+
+functions:
+  health:
+    runtime: python3.8
+    handler: src/health_check/handler.main
+    events:
+      - httpApi:
+          method: GET
+          path: /hello
+    environment:
+      STAGE: ${sls:stage}
