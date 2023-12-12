@@ -2,7 +2,7 @@
 import boto3
 from botocore.exceptions import ClientError
 import json
-SECRET_NAME = "secrest"
+SECRET_NAME = "secrets"
 
 def get_secret():
     region_name = "eu-north-1"
