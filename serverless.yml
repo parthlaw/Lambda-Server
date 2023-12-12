@@ -22,9 +22,22 @@ functions:
   health:
     runtime: python3.8
     handler: src/health_check/handler.main
+    layers:
+      - arn:aws:lambda:eu-north-1:600377480982:layer:sqlalchemy:7
     events:
       - httpApi:
           method: GET
           path: /hello
+    environment:
+      STAGE: ${sls:stage}
+  create:
+    runtime: python3.8
+    handler: src/user/create/handler.main
+    layers:
+      - arn:aws:lambda:eu-north-1:600377480982:layer:sqlalchemy:7
+    events:
+      - httpApi:
+          method: POST
+          path: /create_user
     environment:
       STAGE: ${sls:stage}

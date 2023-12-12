@@ -1,6 +1,7 @@
 from sqlalchemy import Column, MetaData, String, Table, create_engine, select, update
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
+import psycopg2
 
 from schemas.validation_resp import ValidationResp
 class DB:
@@ -11,8 +12,8 @@ class DB:
         self.port=cred["port"]
         db_string=f"postgresql://{self.user}:{self.password}@{self.host}:{self.port}"
         print(db_string)
-        self.db=create_engine(db_string)
-        self.meta=MetaData(self.db)
+        self.db=create_engine(db_string,connect_args={"sslmode": "require"})
+        self.meta=MetaData(schema=None)
         self.user_table = Table(
                 'users',self.meta,
                 Column('id',UUID(as_uuid=True), primary_key=True, default=uuid.uuid4),
@@ -44,17 +45,31 @@ class DB:
                 validation_errors.append(ValidationResp.Wrong_PAN)
         return validation_errors
     def create_user(self,user):
-        validation_errors = self._validate_user(user)
-        if len(validation_errors)!=0:
-            return validation_errors
-        with self.db.connect() as conn:
-            insert_statement = self.user_table.insert().values(
-                    full_name=user["full_name"],
-                    mob_number=user["mob_number"],
-                    pan_number=user["pan_number"]
-                    )
-            conn.execute(insert_statement)
-        return user
+        try:
+            connection = psycopg2.connect(user=self.user,password=self.password,host=self.host,database="postgres")
+            cursor = connection.cursor()
+            validation_errors = self._validate_user(user)
+            if len(validation_errors)!=0:
+                return validation_errors
+            # with self.db.connect() as conn:
+            # insert_statement = self.user_table.insert().values(
+            #         full_name=user["full_name"],
+            #         mob_number=user["mob_number"],
+            #         pan_number=user["pan_number"]
+            #         )
+            id = uuid.uuid4()
+            full_name=user["full_name"]
+            mob_number=user["mob_number"]
+            pan_number=user["pan_number"]
+            insert_statement=f"INSERT INTO users (id,full_name,mob_number,pan_number) VALUES ('{str(id)}','{full_name}','{mob_number}','{pan_number}')"
+            print("INSERT",insert_statement)
+            cursor.execute(insert_statement)
+            cursor.close()
+            connection.commit()
+            return user
+        except Exception as e:
+            print("ERROR",e)
+            raise e
     def get_users(self):
         with self.db.connect() as conn:
             list_users_query = select([self.user_table])
