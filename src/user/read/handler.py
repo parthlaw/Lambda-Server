@@ -9,6 +9,6 @@ def main(event, context):
         creds = get_secret()
         db = DB(creds)
         resp = db.get_users()
-        return Response(statusCode=ResponseCodes.OK.value, body=json.dumps(resp), headers=json.dumps({}))
+        return Response(statusCode=ResponseCodes.OK.value, body=json.dumps(resp), headers=json.dumps({'Access-Control-Allow-Origin': '*'}))
     except Exception as e:
         raise e

@@ -3,6 +3,10 @@ service: crud-server
 package:
   patterns:
     - ./**/*.py
+  exclude:
+    - node_modules/**
+    - venv/**
+    - __pycache__/**
 
 provider:
   name: aws
@@ -26,6 +30,7 @@ functions:
       - arn:aws:lambda:eu-north-1:600377480982:layer:sqlalchemy:7
     events:
       - httpApi:
+          cors: true
           method: GET
           path: /hello
     environment:
@@ -37,6 +42,7 @@ functions:
       - arn:aws:lambda:eu-north-1:600377480982:layer:sqlalchemy:7
     events:
       - httpApi:
+          cors: true
           method: POST
           path: /create_user
     environment:
@@ -48,6 +54,7 @@ functions:
       - arn:aws:lambda:eu-north-1:600377480982:layer:sqlalchemy:7
     events:
       - httpApi:
+          cors: true
           method: GET
           path: /get_users
     environment:
@@ -59,6 +66,7 @@ functions:
       - arn:aws:lambda:eu-north-1:600377480982:layer:sqlalchemy:7
     events:
       - httpApi:
+          cors: true
           method: PATCH
           path: /update_user/{id}
     environment:
@@ -70,6 +78,7 @@ functions:
       - arn:aws:lambda:eu-north-1:600377480982:layer:sqlalchemy:7
     events:
       - httpApi:
+          cors: true
           method: DELETE
           path: /delete_user/{id}
     environment:
