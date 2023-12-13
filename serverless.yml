@@ -8,7 +8,7 @@ provider:
   name: aws
   region: eu-north-1
   versionFunctions: false
-  timeout: 900
+  timeout: 30
   iam:
     role:
       statements:
@@ -39,5 +39,38 @@ functions:
       - httpApi:
           method: POST
           path: /create_user
+    environment:
+      STAGE: ${sls:stage}
+  read:
+    runtime: python3.8
+    handler: src/user/read/handler.main
+    layers:
+      - arn:aws:lambda:eu-north-1:600377480982:layer:sqlalchemy:7
+    events:
+      - httpApi:
+          method: GET
+          path: /get_users
+    environment:
+      STAGE: ${sls:stage}
+  update:
+    runtime: python3.8
+    handler: src/user/update/handler.main
+    layers:
+      - arn:aws:lambda:eu-north-1:600377480982:layer:sqlalchemy:7
+    events:
+      - httpApi:
+          method: PATCH
+          path: /update_user/{id}
+    environment:
+      STAGE: ${sls:stage}
+  delete:
+    runtime: python3.8
+    handler: src/user/delete/handler.main
+    layers:
+      - arn:aws:lambda:eu-north-1:600377480982:layer:sqlalchemy:7
+    events:
+      - httpApi:
+          method: DELETE
+          path: /delete_user/{id}
     environment:
       STAGE: ${sls:stage}

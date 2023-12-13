@@ -12,11 +12,12 @@ def main(event, context):
                 body=json.dumps({"message": "Bad request"}),
                 headers=json.dumps({}),
             )
+        path_params = event.get('pathParameters', {})
+        user_id = path_params.get('id')       
         print(json.dumps(event))
         creds = get_secret()
         db = DB(creds)
-        resp = db.create_user(json.loads(event["body"]))
+        resp = db.update_user(user_id,json.loads(event["body"]))
         return Response(statusCode=ResponseCodes.OK.value, body=json.dumps(resp), headers=json.dumps({}))
     except Exception as e:
-        print("ERROR in LAMBDA",e)
         raise e

@@ -7,5 +7,5 @@ class ResponseCodes(Enum):
     BAD_REQUEST=404
 class Response(TypedDict):
     statusCode:int
-    headers:Optional[dict]
-    body:dict
+    headers:Optional[str]
+    body:str
