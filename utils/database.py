@@ -21,6 +21,21 @@ class DB:
                 Column('mob_number',String),
                 Column('pan_number',String,primary_key=True)
                 )
+    def _get_conn(self):
+        return psycopg2.connect(user=self.user,password=self.password,host=self.host,database="postgres")
+
+    def _convert_row(self,rows):
+        resp=[]
+        for row in rows:
+            obj={}
+            i=0
+            for column in self.user_table.columns:
+                obj[column.name]=row[i]
+                i+=1
+            resp.append(obj)
+        return resp
+
+
     def _validate_phone(self,phone:str):
         if len(phone)!=10:
             return False
@@ -46,7 +61,7 @@ class DB:
         return validation_errors
     def create_user(self,user):
         try:
-            connection = psycopg2.connect(user=self.user,password=self.password,host=self.host,database="postgres")
+            connection = self._get_conn()
             cursor = connection.cursor()
             validation_errors = self._validate_user(user)
             if len(validation_errors)!=0:
@@ -71,39 +86,67 @@ class DB:
             print("ERROR",e)
             raise e
     def get_users(self):
-        with self.db.connect() as conn:
-            list_users_query = select([self.user_table])
-            rows=conn.execute(list_users_query).all()
-            if rows is None:
-                return []
-            return rows
+        # with self.db.connect() as conn:
+        connection = self._get_conn()
+        cursor = connection.cursor()
+        list_users_query = f"SELECT * FROM {str(self.user_table.name)}"
+        cursor.execute(list_users_query)
+        rows = cursor.fetchall()
+        cursor.close()
+        connection.commit()
+        print(rows)
+        resp=self._convert_row(rows)
+        print(resp)
+        if rows is None:
+            return []
+        return resp
     def delete_user(self,user_id):
-        select_query=select([self.user_table]).where(self.user_table.c.id==user_id)
-        with self.db.connect() as conn:
-            result = conn.execute(select_query).first()
-        if result is None:
+        select_query=f"SELECT * FROM {str(self.user_table.name)} WHERE id='{user_id}'"
+        connection=self._get_conn()
+        cursor=connection.cursor()
+        cursor.execute(select_query)
+        result=cursor.fetchall()
+        if result is None or len(result)==0:
+            cursor.close()
+            connection.commit()
             return False
-        delete_query = self.user_table.delete().where(self.user_table.c.id==user_id)
-        with self.db.connect() as conn:
-            conn.execute(delete_query)
+        delete_query = f"DELETE FROM {str(self.user_table.name)} WHERE id='{user_id}'"
+        cursor.execute(delete_query)
+        cursor.close()
+        connection.commit()
         return True
     def update_user(self,user_id,update_data:dict):
         validation_errors = self._validate_user(update_data)
         if len(validation_errors)!=0:
             return validation_errors
-        select_query=select([self.user_table]).where(self.user_table.c.id==user_id)
-        with self.db.connect() as conn:
-            result = conn.execute(select_query).first()
-        if result is None:
+        print(user_id)
+        select_query=f"SELECT * FROM {str(self.user_table.name)} WHERE id='{user_id}'"
+        connection=self._get_conn()
+        cursor=connection.cursor()
+        cursor.execute(select_query)
+        result = cursor.fetchall()
+        if result is None or len(result)==0:
+            cursor.close()
+            connection.commit()
             return None
+        result = self._convert_row(result)[0]
         for key,value in update_data.items():
             result[key]=value
-        update_query = update(self.user_table).where(self.user_table.c.id==user_id).values(
-                full_name=result["full_name"],
-                mob_number=result["mob_number"],
-                pan_number=result["pan_number"]
-                )
-        with self.db.connect() as conn:
-            result= conn.execute(update_query)
+
+        update_columns=""
+        i=0
+        for column in self.user_table.columns:
+            if(column.name=="id"):
+                continue
+            if i!=0:
+                update_columns+=","
+            update_columns+=f"{column.name}='{result[column.name]}'"
+            i+=1
+        update_query =f"""UPDATE {str(self.user_table.name)}
+                        SET {update_columns}
+                        WHERE id='{user_id}'"""        
+        cursor.execute(update_query)
+        cursor.close()
+        connection.commit()
         return result
 
