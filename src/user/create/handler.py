@@ -16,6 +16,8 @@ def main(event, context):
         creds = get_secret()
         db = DB(creds)
         resp = db.create_user(json.loads(event["body"]))
+        if isinstance(resp,list):
+            return Response(statusCode=ResponseCodes.BAD_REQUEST.value, body=json.dumps(resp), headers=json.dumps({}))
         return Response(statusCode=ResponseCodes.OK.value, body=json.dumps(resp), headers=json.dumps({}))
     except Exception as e:
         print("ERROR in LAMBDA",e)

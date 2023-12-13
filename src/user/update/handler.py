@@ -18,6 +18,10 @@ def main(event, context):
         creds = get_secret()
         db = DB(creds)
         resp = db.update_user(user_id,json.loads(event["body"]))
+        if isinstance(resp,list):
+            return Response(statusCode=ResponseCodes.NOT_FOUND.value, body=json.dumps({"message":"User not found"}), headers=json.dumps({}))
+        if resp is None:
+            return Response(statusCode=ResponseCodes.NOT_FOUND.value, body=json.dumps(resp), headers=json.dumps({}))
         return Response(statusCode=ResponseCodes.OK.value, body=json.dumps(resp), headers=json.dumps({}))
     except Exception as e:
         raise e

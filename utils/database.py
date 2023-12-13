@@ -66,12 +66,6 @@ class DB:
             validation_errors = self._validate_user(user)
             if len(validation_errors)!=0:
                 return validation_errors
-            # with self.db.connect() as conn:
-            # insert_statement = self.user_table.insert().values(
-            #         full_name=user["full_name"],
-            #         mob_number=user["mob_number"],
-            #         pan_number=user["pan_number"]
-            #         )
             id = uuid.uuid4()
             full_name=user["full_name"]
             mob_number=user["mob_number"]
