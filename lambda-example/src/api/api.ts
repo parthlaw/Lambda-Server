@@ -1,5 +1,5 @@
 import axios from "axios"
-import { UserType } from "./types"
+import { UserType } from "../types"
 
 const BASE_URL="https://aa4jkqbo36.execute-api.eu-north-1.amazonaws.com"
 
